@@ -1,6 +1,6 @@
 import unittest
 
-import target_duckdb
+import singer_duckdb
 
 
 class TestUnit(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestUnit(unittest.TestCase):
 
     def test_config_validation(self):
         """Test configuration validator"""
-        validator = target_duckdb.validate_config
+        validator = singer_duckdb.validate_config
         empty_config = {}
         minimal_config = {
             "filepath": "dummy-value",
@@ -45,7 +45,7 @@ class TestUnit(unittest.TestCase):
 
     def test_column_type_mapping(self):
         """Test JSON type to DuckDB column type mappings"""
-        mapper = target_duckdb.db_sync.column_type
+        mapper = singer_duckdb.db_sync.column_type
 
         # Incoming JSON schema types
         json_str = {"type": ["string"]}
@@ -88,21 +88,21 @@ class TestUnit(unittest.TestCase):
     def test_stream_name_to_dict(self):
         """Test identifying catalog, schema and table names from fully qualified stream and table names"""
         # Singer stream name format (Default '-' separator)
-        assert target_duckdb.db_sync.stream_name_to_dict("my_table") == {
+        assert singer_duckdb.db_sync.stream_name_to_dict("my_table") == {
             "catalog_name": None,
             "schema_name": None,
             "table_name": "my_table",
         }
 
         # Singer stream name format (Default '-' separator)
-        assert target_duckdb.db_sync.stream_name_to_dict("my_schema-my_table") == {
+        assert singer_duckdb.db_sync.stream_name_to_dict("my_schema-my_table") == {
             "catalog_name": None,
             "schema_name": "my_schema",
             "table_name": "my_table",
         }
 
         # Singer stream name format (Default '-' separator)
-        assert target_duckdb.db_sync.stream_name_to_dict(
+        assert singer_duckdb.db_sync.stream_name_to_dict(
             "my_catalog-my_schema-my_table"
         ) == {
             "catalog_name": "my_catalog",
@@ -111,14 +111,14 @@ class TestUnit(unittest.TestCase):
         }
 
         # Redshift table format (Custom '.' separator)
-        assert target_duckdb.db_sync.stream_name_to_dict("my_table", separator=".") == {
+        assert singer_duckdb.db_sync.stream_name_to_dict("my_table", separator=".") == {
             "catalog_name": None,
             "schema_name": None,
             "table_name": "my_table",
         }
 
         # Redshift table format (Custom '.' separator)
-        assert target_duckdb.db_sync.stream_name_to_dict(
+        assert singer_duckdb.db_sync.stream_name_to_dict(
             "my_schema.my_table", separator="."
         ) == {
             "catalog_name": None,
@@ -127,7 +127,7 @@ class TestUnit(unittest.TestCase):
         }
 
         # Redshift table format (Custom '.' separator)
-        assert target_duckdb.db_sync.stream_name_to_dict(
+        assert singer_duckdb.db_sync.stream_name_to_dict(
             "my_catalog.my_schema.my_table", separator="."
         ) == {
             "catalog_name": "my_catalog",
@@ -137,7 +137,7 @@ class TestUnit(unittest.TestCase):
 
     def test_flatten_schema(self):
         """Test flattening of SCHEMA messages"""
-        flatten_schema = target_duckdb.db_sync.flatten_schema
+        flatten_schema = singer_duckdb.db_sync.flatten_schema
 
         # Schema with no object properties should be empty dict
         schema_with_no_properties = {"type": "object"}
@@ -234,7 +234,7 @@ class TestUnit(unittest.TestCase):
 
     def test_flatten_record(self):
         """Test flattening of RECORD messages"""
-        flatten_record = target_duckdb.db_sync.flatten_record
+        flatten_record = singer_duckdb.db_sync.flatten_record
 
         empty_record = {}
         # Empty record should be empty dict
@@ -298,7 +298,7 @@ class TestUnit(unittest.TestCase):
         }
 
     def test_flatten_record_with_flatten_schema(self):
-        flatten_record = target_duckdb.db_sync.flatten_record
+        flatten_record = singer_duckdb.db_sync.flatten_record
 
         flatten_schema = {"id": {"type": ["object", "array", "null"]}}
 

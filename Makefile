@@ -6,7 +6,7 @@ venv:
 
 pylint:
 	. ./venv/bin/activate ;\
-	pylint --rcfile .pylintrc target_duckdb/
+	pylint --rcfile .pylintrc singer_duckdb/
 
 unit_test:
 	. ./venv/bin/activate ;\
@@ -15,4 +15,3 @@ unit_test:
 integration_test:
 	. ./venv/bin/activate ;\
 	pytest tests/integration -v
-

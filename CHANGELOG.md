@@ -1,3 +1,7 @@
+0.4.0 (2022-05-22)
+
+- Migrate to Meltano SDK for Taps and Targets
+
 0.3.0 (2022-04-11)
 ------------------
 

@@ -1,9 +1,10 @@
-import json
 import collections.abc
-import re
-import uuid
 import itertools
+import json
+import re
 import time
+import uuid
+
 from singer import get_logger
 
 
@@ -44,7 +45,7 @@ def column_type(schema_property):
     elif "boolean" in property_type:
         col_type = "boolean"
 
-    get_logger("target_duckdb").debug(
+    get_logger("singer_duckdb").debug(
         "schema_property: %s -> col_type: %s", schema_property, col_type
     )
 
@@ -216,7 +217,7 @@ class DbSync:
         self.stream_schema_message = stream_schema_message
 
         # logger to be used across the class's methods
-        self.logger = get_logger("target_duckdb")
+        self.logger = get_logger("singer_duckdb")
         self.schema_name = None
 
         # Init stream schema

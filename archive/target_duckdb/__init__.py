@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import copy
 import io
 import json
 import os
 import sys
-import copy
 from datetime import datetime
 from decimal import Decimal
 from tempfile import mkstemp
@@ -14,20 +14,11 @@ import duckdb
 from jsonschema import Draft7Validator, FormatChecker
 from singer import get_logger
 
-from target_duckdb.db_sync import DbSync
+from singer_duckdb.db_sync import DbSync
 
-LOGGER = get_logger("target_duckdb")
+LOGGER = get_logger("singer_duckdb")
 
 DEFAULT_BATCH_SIZE_ROWS = 100000
-
-
-class RecordValidationException(Exception):
-    """Exception to raise when record validation failed"""
-
-
-class InvalidValidationOperationException(Exception):
-    """Exception to raise when internal JSON schema validation process failed"""
-
 
 def float_to_decimal(value):
     """Walk the given data structure and turn all instances of float into
