@@ -29,10 +29,11 @@ def duckdb_connector(duckdb_sample_db_config) -> DuckDBConnector:
 
 
 @pytest.fixture
-def duckdb_sample_db(duckdb_connector):
+def duckdb_sample_db(duckdb_connector: DuckDBConnector):
     """Return a path to a newly constructed sample DB."""
+    _ = duckdb_connector.connection
     for t in range(3):
-        duckdb_connector.connection.execute(f"DROP TABLE IF EXISTS t{t}")
+        # duckdb_connector.connection.execute(f"DROP TABLE IF EXISTS t{t}")
         duckdb_connector.connection.execute(
             f"CREATE TABLE t{t} (c1 int PRIMARY KEY, c2 varchar(10))"
         )
