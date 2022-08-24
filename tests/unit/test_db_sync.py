@@ -9,8 +9,8 @@ class TestUnit(unittest.TestCase):
     """
 
     @classmethod
-    def setUp(self):
-        self.config = {}
+    def setUp(cls):
+        cls.config = {}
 
     def test_config_validation(self):
         """Test configuration validator"""
@@ -307,9 +307,7 @@ class TestUnit(unittest.TestCase):
             (False, {"id": 1, "data": "xyz"}, {"id": 1, "data": "xyz"}),
         ]
 
-        for idx, (should_use_flatten_schema, record, expected_output) in enumerate(
-            test_cases
-        ):
+        for should_use_flatten_schema, record, expected_output in test_cases:
             output = flatten_record(
                 record, flatten_schema if should_use_flatten_schema else None
             )

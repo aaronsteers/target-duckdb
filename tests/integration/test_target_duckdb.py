@@ -32,9 +32,7 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(cls.connection, cls.config)
         if cls.config["default_target_schema"]:
             duckdb.query(
-                "DROP SCHEMA IF EXISTS {} CASCADE".format(
-                    cls.config["default_target_schema"]
-                )
+                f'DROP SCHEMA IF EXISTS {cls.config["default_target_schema"]} CASCADE'
             )
 
     @classmethod
@@ -86,17 +84,21 @@ class TestIntegration(unittest.TestCase):
 
         # Get loaded rows from tables
         table_one = duckdb.query(
-            "SELECT * FROM {}.test_table_one ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_one ORDER BY c_pk"
         )
+
         table_two = duckdb.query(
-            "SELECT * FROM {}.test_table_two ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_two ORDER BY c_pk"
         )
+
         table_three = duckdb.query(
-            "SELECT * FROM {}.test_table_three ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_three ORDER BY c_pk"
         )
+
         table_four = duckdb.query(
-            "SELECT * FROM {}.test_table_four ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_four ORDER BY c_pk"
         )
+
 
         # ----------------------------------------------------------------------
         # Check rows in table_one
@@ -111,8 +113,17 @@ class TestIntegration(unittest.TestCase):
         # Check rows in table_tow
         # ----------------------------------------------------------------------
         expected_table_two = []
-        if not should_hard_deleted_rows:
-            expected_table_two = [
+        expected_table_two = (
+            [
+                {
+                    "c_int": 2,
+                    "c_pk": 2,
+                    "c_varchar": "2",
+                    "c_date": datetime.datetime(2019, 2, 10, 2, 0, 0),
+                }
+            ]
+            if should_hard_deleted_rows
+            else [
                 {
                     "c_int": 1,
                     "c_pk": 1,
@@ -126,15 +137,7 @@ class TestIntegration(unittest.TestCase):
                     "c_date": datetime.datetime(2019, 2, 10, 2, 0, 0),
                 },
             ]
-        else:
-            expected_table_two = [
-                {
-                    "c_int": 2,
-                    "c_pk": 2,
-                    "c_varchar": "2",
-                    "c_date": datetime.datetime(2019, 2, 10, 2, 0, 0),
-                }
-            ]
+        )
 
         self.assertEqual(
             self.remove_metadata_columns_from_rows(table_two), expected_table_two
@@ -144,8 +147,23 @@ class TestIntegration(unittest.TestCase):
         # Check rows in table_three
         # ----------------------------------------------------------------------
         expected_table_three = []
-        if not should_hard_deleted_rows:
-            expected_table_three = [
+        expected_table_three = (
+            [
+                {
+                    "c_int": 1,
+                    "c_pk": 1,
+                    "c_varchar": "1",
+                    "c_time": datetime.time(4, 0, 0),
+                },
+                {
+                    "c_int": 2,
+                    "c_pk": 2,
+                    "c_varchar": "2",
+                    "c_time": datetime.time(7, 15, 0),
+                },
+            ]
+            if should_hard_deleted_rows
+            else [
                 {
                     "c_int": 1,
                     "c_pk": 1,
@@ -165,21 +183,7 @@ class TestIntegration(unittest.TestCase):
                     "c_time": datetime.time(23, 0, 3),
                 },
             ]
-        else:
-            expected_table_three = [
-                {
-                    "c_int": 1,
-                    "c_pk": 1,
-                    "c_varchar": "1",
-                    "c_time": datetime.time(4, 0, 0),
-                },
-                {
-                    "c_int": 2,
-                    "c_pk": 2,
-                    "c_varchar": "2",
-                    "c_time": datetime.time(7, 15, 0),
-                },
-            ]
+        )
 
         self.assertEqual(
             self.remove_metadata_columns_from_rows(table_three), expected_table_three
@@ -189,8 +193,25 @@ class TestIntegration(unittest.TestCase):
         # Check rows in table_four
         # ----------------------------------------------------------------------
         expected_table_four = []
-        if not should_hard_deleted_rows:
-            expected_table_four = [
+        expected_table_four = (
+            [
+                {
+                    "c_pk": 1,
+                    "c_smallint": 1,
+                    "c_integer": 1,
+                    "c_bigint": 1,
+                    "c_nobound_int": 1,
+                },
+                {
+                    "c_pk": 2,
+                    "c_smallint": 2,
+                    "c_integer": 2,
+                    "c_bigint": 2,
+                    "c_nobound_int": 2,
+                },
+            ]
+            if should_hard_deleted_rows
+            else [
                 {
                     "c_pk": 1,
                     "c_smallint": 1,
@@ -213,23 +234,7 @@ class TestIntegration(unittest.TestCase):
                     "c_nobound_int": 3,
                 },
             ]
-        else:
-            expected_table_four = [
-                {
-                    "c_pk": 1,
-                    "c_smallint": 1,
-                    "c_integer": 1,
-                    "c_bigint": 1,
-                    "c_nobound_int": 1,
-                },
-                {
-                    "c_pk": 2,
-                    "c_smallint": 2,
-                    "c_integer": 2,
-                    "c_bigint": 2,
-                    "c_nobound_int": 2,
-                },
-            ]
+        )
 
         self.assertEqual(
             self.remove_metadata_columns_from_rows(table_four), expected_table_four
@@ -254,19 +259,21 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_one = duckdb.query(
-            "SELECT * FROM {}.logical1_table1 ORDER BY cid".format(target_schema)
+            f"SELECT * FROM {target_schema}.logical1_table1 ORDER BY cid"
         )
+
         table_two = duckdb.query(
-            "SELECT * FROM {}.logical1_table2 ORDER BY cid".format(target_schema)
+            f"SELECT * FROM {target_schema}.logical1_table2 ORDER BY cid"
         )
+
         table_three = duckdb.query(
-            "SELECT * FROM {}.logical2_table1 ORDER BY cid".format(target_schema)
+            f"SELECT * FROM {target_schema}.logical2_table1 ORDER BY cid"
         )
+
         table_four = duckdb.query(
-            "SELECT cid, ctimentz, ctimetz FROM {}.logical1_edgydata WHERE CID IN(1,2,3,4,5,6,8,9) ORDER BY cid".format(
-                target_schema
-            )
+            f"SELECT cid, ctimentz, ctimetz FROM {target_schema}.logical1_edgydata WHERE CID IN(1,2,3,4,5,6,8,9) ORDER BY cid"
         )
+
 
         # ----------------------------------------------------------------------
         # Check rows in table_one
@@ -336,13 +343,11 @@ class TestIntegration(unittest.TestCase):
             self.assert_metadata_columns_exist(table_one)
             self.assert_metadata_columns_exist(table_two)
             self.assert_metadata_columns_exist(table_three)
-            self.assert_metadata_columns_not_exist(table_four)
         else:
             self.assert_metadata_columns_not_exist(table_one)
             self.assert_metadata_columns_not_exist(table_two)
             self.assert_metadata_columns_not_exist(table_three)
-            self.assert_metadata_columns_not_exist(table_four)
-
+        self.assert_metadata_columns_not_exist(table_four)
         # Check if data replicated correctly
         assert self.remove_metadata_columns_from_rows(table_one) == expected_table_one
         assert self.remove_metadata_columns_from_rows(table_two) == expected_table_two
@@ -356,19 +361,21 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_one = duckdb.query(
-            "SELECT * FROM {}.logical1_table1 ORDER BY CID".format(target_schema)
+            f"SELECT * FROM {target_schema}.logical1_table1 ORDER BY CID"
         )
+
         table_two = duckdb.query(
-            "SELECT * FROM {}.logical1_table2 ORDER BY CID".format(target_schema)
+            f"SELECT * FROM {target_schema}.logical1_table2 ORDER BY CID"
         )
+
         table_three = duckdb.query(
-            "SELECT * FROM {}.logical2_table1 ORDER BY CID".format(target_schema)
+            f"SELECT * FROM {target_schema}.logical2_table1 ORDER BY CID"
         )
+
         table_four = duckdb.query(
-            "SELECT * FROM {}.logical1_edgydata WHERE cid IN(1,2,3,4,5,6,8,9) ORDER BY cid".format(
-                target_schema
-            )
+            f"SELECT * FROM {target_schema}.logical1_edgydata WHERE cid IN(1,2,3,4,5,6,8,9) ORDER BY cid"
         )
+
 
         self.assertEqual(table_one, [])
         self.assertEqual(table_two, [])
@@ -383,8 +390,9 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_one = duckdb.query(
-            'SELECT * FROM {}.{} ORDER BY "new"'.format(target_schema, table_name)
+            f'SELECT * FROM {target_schema}.{table_name} ORDER BY "new"'
         )
+
 
         # ----------------------------------------------------------------------
         # Check rows in table_one
@@ -518,8 +526,9 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_unicode = duckdb.query(
-            "SELECT * FROM {}.test_table_unicode ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_unicode ORDER BY c_pk"
         )
+
 
         self.assertEqual(
             self.remove_metadata_columns_from_rows(table_unicode),
@@ -568,8 +577,9 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_long_texts = duckdb.query(
-            "SELECT * FROM {}.test_table_long_texts ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_long_texts ORDER BY c_pk"
         )
+
 
         # Test not very long texts by exact match
         self.assertEqual(
@@ -628,10 +638,9 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_non_db_friendly_columns = duckdb.query(
-            "SELECT * FROM {}.test_table_non_db_friendly_columns ORDER BY c_pk".format(
-                target_schema
-            )
+            f"SELECT * FROM {target_schema}.test_table_non_db_friendly_columns ORDER BY c_pk"
         )
+
 
         self.assertEqual(
             self.remove_metadata_columns_from_rows(table_non_db_friendly_columns),
@@ -675,10 +684,9 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         unflattened_table = duckdb.query(
-            """SELECT * FROM {}.test_table_nested_schema ORDER BY c_pk""".format(
-                target_schema
-            )
+            f"""SELECT * FROM {target_schema}.test_table_nested_schema ORDER BY c_pk"""
         )
+
 
         # Should be valid nested JSON strings
         self.assertEqual(
@@ -715,10 +723,9 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         flattened_table = duckdb.query(
-            "SELECT * FROM {}.test_table_nested_schema ORDER BY c_pk".format(
-                target_schema
-            )
+            f"SELECT * FROM {target_schema}.test_table_nested_schema ORDER BY c_pk"
         )
+
 
         # Should be flattened columns
         self.assertEqual(
@@ -759,14 +766,17 @@ class TestIntegration(unittest.TestCase):
         duckdb = DbSync(self.connection, self.config)
         target_schema = self.config.get("default_target_schema", "")
         table_one = duckdb.query(
-            "SELECT * FROM {}.test_table_one ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_one ORDER BY c_pk"
         )
+
         table_two = duckdb.query(
-            "SELECT * FROM {}.test_table_two ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_two ORDER BY c_pk"
         )
+
         table_three = duckdb.query(
-            "SELECT * FROM {}.test_table_three ORDER BY c_pk".format(target_schema)
+            f"SELECT * FROM {target_schema}.test_table_three ORDER BY c_pk"
         )
+
 
         # Get the previous column name from information schema in test_table_two
         previous_column_name = duckdb.query(

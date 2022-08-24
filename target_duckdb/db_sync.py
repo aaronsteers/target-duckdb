@@ -52,11 +52,11 @@ def column_type(schema_property):
 
 
 def safe_column_name(name):
-    return '"{}"'.format(name).lower()
+    return f'"{name}"'.lower()
 
 
 def column_clause(name, schema_property):
-    return "{} {}".format(safe_column_name(name), column_type(schema_property))
+    return f"{safe_column_name(name)} {column_type(schema_property)}"
 
 
 def flatten_key(k, parent_key, sep):
@@ -68,8 +68,11 @@ def flatten_key(k, parent_key, sep):
             r"[a-z]", "", camelize(inflected_key[reducer_index])
         )
         inflected_key[reducer_index] = (
-            reduced_key if len(reduced_key) > 1 else inflected_key[reducer_index][0:3]
+            reduced_key
+            if len(reduced_key) > 1
+            else inflected_key[reducer_index][:3]
         ).lower()
+
         reducer_index += 1
 
     return sep.join(inflected_key)
@@ -97,23 +100,22 @@ def flatten_schema(d, parent_key=[], sep="__", level=0, max_level=0):
                 )
             else:
                 items.append((new_key, v))
-        else:
-            if len(v.values()) > 0:
-                if list(v.values())[0][0]["type"] == "string":
-                    list(v.values())[0][0]["type"] = ["null", "string"]
-                    items.append((new_key, list(v.values())[0][0]))
-                elif list(v.values())[0][0]["type"] == "array":
-                    list(v.values())[0][0]["type"] = ["null", "array"]
-                    items.append((new_key, list(v.values())[0][0]))
-                elif list(v.values())[0][0]["type"] == "object":
-                    list(v.values())[0][0]["type"] = ["null", "object"]
-                    items.append((new_key, list(v.values())[0][0]))
+        elif len(v.values()) > 0:
+            if list(v.values())[0][0]["type"] == "string":
+                list(v.values())[0][0]["type"] = ["null", "string"]
+                items.append((new_key, list(v.values())[0][0]))
+            elif list(v.values())[0][0]["type"] == "array":
+                list(v.values())[0][0]["type"] = ["null", "array"]
+                items.append((new_key, list(v.values())[0][0]))
+            elif list(v.values())[0][0]["type"] == "object":
+                list(v.values())[0][0]["type"] = ["null", "object"]
+                items.append((new_key, list(v.values())[0][0]))
 
     key_func = lambda item: item[0]
     sorted_items = sorted(items, key=key_func)
     for k, g in itertools.groupby(sorted_items, key=key_func):
         if len(list(g)) > 1:
-            raise ValueError("Duplicate column name produced in schema: {}".format(k))
+            raise ValueError(f"Duplicate column name produced in schema: {k}")
 
     return dict(sorted_items)
 
@@ -123,15 +125,14 @@ def _should_json_dump_value(key, value, flatten_schema=None):
     if isinstance(value, (dict, list)):
         return True
 
-    if (
-        flatten_schema
-        and key in flatten_schema
-        and "type" in flatten_schema[key]
-        and set(flatten_schema[key]["type"]) == {"null", "object", "array"}
-    ):
-        return True
-
-    return False
+    return bool(
+        (
+            flatten_schema
+            and key in flatten_schema
+            and "type" in flatten_schema[key]
+            and set(flatten_schema[key]["type"]) == {"null", "object", "array"}
+        )
+    )
 
 
 # pylint: disable-msg=too-many-arguments
@@ -223,11 +224,7 @@ class DbSync:
         if stream_schema_message is not None:
             # Define initial list of indices to created
             self.hard_delete = self.connection_config.get("hard_delete")
-            if self.hard_delete:
-                self.indices = ["_sdc_deleted_at"]
-            else:
-                self.indices = []
-
+            self.indices = ["_sdc_deleted_at"] if self.hard_delete else []
             #  Define target schema name.
             #  --------------------------
             #  Target schema name can be defined in multiple ways:
@@ -265,11 +262,9 @@ class DbSync:
 
             if not self.schema_name:
                 raise Exception(
-                    "Target schema name not defined in config. Neither 'default_target_schema' (string)"
-                    "nor 'schema_mapping' (object) defines target schema for {} stream.".format(
-                        stream_name
-                    )
+                    f"Target schema name not defined in config. Neither 'default_target_schema' (string)nor 'schema_mapping' (object) defines target schema for {stream_name} stream."
                 )
+
 
             self.data_flattening_max_level = self.connection_config.get(
                 "data_flattening_max_level", 0
@@ -288,10 +283,7 @@ class DbSync:
             cur.execute(query)
 
         cols = [x[0] for x in cur.description]
-        ret = []
-        for row in cur.fetchall():
-            ret.append({cols[i]: row[i] for i in range(len(cols))})
-        return ret
+        return [{cols[i]: row[i] for i in range(len(cols))} for row in cur.fetchall()]
 
     def table_name(self, stream_name, is_temporary=False, without_schema=False):
         stream_dict = stream_name_to_dict(stream_name)
@@ -299,7 +291,7 @@ class DbSync:
         pg_table_name = table_name.replace(".", "_").replace("-", "_").lower()
 
         if is_temporary:
-            return "tmp_{}".format(str(uuid.uuid4()).replace("-", "_"))
+            return f'tmp_{str(uuid.uuid4()).replace("-", "_")}'
 
         if without_schema:
             return f'"{pg_table_name.lower()}"'
@@ -349,11 +341,8 @@ class DbSync:
         temp_table = self.table_name(stream_schema_message["stream"], is_temporary=True)
         cur.execute(self.create_table_query(table_name=temp_table, is_temporary=True))
 
-        insert_sql = "INSERT INTO {} ({}) VALUES ({})".format(
-            temp_table,
-            ", ".join(self.column_names()),
-            ", ".join(["?" for x in self.column_names()])
-        )
+        insert_sql = f'INSERT INTO {temp_table} ({", ".join(self.column_names())}) VALUES ({", ".join(["?" for _ in self.column_names()])})'
+
         self.logger.debug(insert_sql)
         for record in records:
             cur.execute(insert_sql, self.record_to_flattened(record))
@@ -395,7 +384,7 @@ class DbSync:
         WHERE {}
         """.format(
             table,
-            ", ".join(["{}=s.{}".format(c, c) for c in columns]),
+            ", ".join([f"{c}=s.{c}" for c in columns]),
             temp_table,
             self.primary_key_condition(table),
         )
@@ -403,12 +392,12 @@ class DbSync:
     def primary_key_condition(self, right_table):
         stream_schema_message = self.stream_schema_message
         names = primary_column_names(stream_schema_message)
-        return " AND ".join(["s.{} = {}.{}".format(c, right_table, c) for c in names])
+        return " AND ".join([f"s.{c} = {right_table}.{c}" for c in names])
 
     def primary_key_null_condition(self, right_table):
         stream_schema_message = self.stream_schema_message
         names = primary_column_names(stream_schema_message)
-        return " AND ".join(["{}.{} is null".format(right_table, c) for c in names])
+        return " AND ".join([f"{right_table}.{c} is null" for c in names])
 
     def column_names(self):
         return [safe_column_name(name) for name in self.flatten_schema]
@@ -433,11 +422,7 @@ class DbSync:
                 stream_schema_message["stream"], is_temporary=is_temporary
             )
 
-        return "CREATE {}TABLE IF NOT EXISTS {} ({})".format(
-            "TEMP " if is_temporary else "",
-            table_name if table_name else gen_table_name,
-            ", ".join(columns + primary_key),
-        )
+        return f'CREATE {"TEMP " if is_temporary else ""}TABLE IF NOT EXISTS {table_name or gen_table_name} ({", ".join(columns + primary_key)})'
 
     def create_index(self, stream, column):
         table = self.table_name(stream)
@@ -446,9 +431,7 @@ class DbSync:
             table_without_schema[:30].replace(" ", "").replace('"', ""),
             column.replace(",", "_"),
         )
-        query = "CREATE INDEX IF NOT EXISTS {} ON {} ({})".format(
-            index_name, table, column
-        )
+        query = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"
         self.logger.info(
             "Creating index on '%s' table on '%s' column(s)... %s", table, column, query
         )
@@ -461,9 +444,8 @@ class DbSync:
 
     def delete_rows(self, stream):
         table = self.table_name(stream)
-        query = "DELETE FROM {} WHERE _sdc_deleted_at IS NOT NULL RETURNING _sdc_deleted_at".format(
-            table
-        )
+        query = f"DELETE FROM {table} WHERE _sdc_deleted_at IS NOT NULL RETURNING _sdc_deleted_at"
+
         self.logger.info("Deleting rows from '%s' table... %s", table, query)
         self.logger.info("DELETE %s", len(self.query(query)))
 
@@ -484,7 +466,7 @@ class DbSync:
             )
 
         if len(schema_rows) == 0:
-            query = "CREATE SCHEMA IF NOT EXISTS {}".format(schema_name)
+            query = f"CREATE SCHEMA IF NOT EXISTS {schema_name}"
             self.logger.info(
                 "Schema '%s' does not exist. Creating... %s", schema_name, query
             )
@@ -533,9 +515,10 @@ class DbSync:
             self.add_column(column, stream)
 
     def drop_column(self, column_name, stream):
-        drop_column = "ALTER TABLE {} DROP COLUMN {}".format(
-            self.table_name(stream), column_name
+        drop_column = (
+            f"ALTER TABLE {self.table_name(stream)} DROP COLUMN {column_name}"
         )
+
         self.logger.info("Dropping column: %s", drop_column)
         self.query(drop_column)
 
@@ -550,9 +533,7 @@ class DbSync:
         self.query(version_column)
 
     def add_column(self, column, stream):
-        add_column = "ALTER TABLE {} ADD COLUMN {}".format(
-            self.table_name(stream), column
-        )
+        add_column = f"ALTER TABLE {self.table_name(stream)} ADD COLUMN {column}"
         self.logger.info("Adding column: %s", add_column)
         self.query(add_column)
 
@@ -560,17 +541,16 @@ class DbSync:
         stream_schema_message = self.stream_schema_message
         stream = stream_schema_message["stream"]
         table_name = self.table_name(stream, without_schema=True)
-        found_tables = [
+        if found_tables := [
             table
             for table in (self.get_tables())
             if f'"{table["table_name"].lower()}"' == table_name
-        ]
-        if len(found_tables) == 0:
+        ]:
+            self.logger.info("Table '%s' exists", table_name)
+            self.update_columns()
+        else:
             query = self.create_table_query()
             self.logger.info(
                 "Table '%s' does not exist. Creating... %s", table_name, query
             )
             self.query(query)
-        else:
-            self.logger.info("Table '%s' exists", table_name)
-            self.update_columns()

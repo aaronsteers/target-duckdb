@@ -83,21 +83,21 @@ def emit_state(state):
     if state is not None:
         line = json.dumps(state)
         LOGGER.debug("Emitting state %s", line)
-        sys.stdout.write("{}\n".format(line))
+        sys.stdout.write(f"{line}\n")
         sys.stdout.flush()
 
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 def validate_config(config):
-    errors = []
     required_config_keys = [
         "filepath",
     ]
 
-    # Check if mandatory keys exist
-    for k in required_config_keys:
-        if not config.get(k, None):
-            errors.append("Required key is missing from config: [{}]".format(k))
+    errors = [
+        f"Required key is missing from config: [{k}]"
+        for k in required_config_keys
+        if not config.get(k, None)
+    ]
 
     # Check target schema config
     config_default_target_schema = config.get("default_target_schema", None)
@@ -146,20 +146,17 @@ def persist_lines(connection, config, lines) -> None:
             raise
 
         if "type" not in o:
-            raise Exception("Line is missing required key 'type': {}".format(line))
+            raise Exception(f"Line is missing required key 'type': {line}")
         t = o["type"]
 
         if t == "RECORD":
             if "stream" not in o:
-                raise Exception(
-                    "Line is missing required key 'stream': {}".format(line)
-                )
+                raise Exception(f"Line is missing required key 'stream': {line}")
             if o["stream"] not in schemas:
                 raise Exception(
-                    "A record for stream {} was encountered before a corresponding schema".format(
-                        o["stream"]
-                    )
+                    f'A record for stream {o["stream"]} was encountered before a corresponding schema'
                 )
+
 
             # Get schema for this record's stream
             stream = o["stream"]
@@ -183,7 +180,7 @@ def persist_lines(connection, config, lines) -> None:
                 o["record"]
             )
             if not primary_key_string:
-                primary_key_string = "RID-{}".format(total_row_count[stream])
+                primary_key_string = f"RID-{total_row_count[stream]}"
 
             if stream not in records_to_load:
                 records_to_load[stream] = {}
@@ -205,11 +202,7 @@ def persist_lines(connection, config, lines) -> None:
 
             if row_count[stream] >= batch_size_rows:
                 # flush all streams, delete records if needed, reset counts and then emit current state
-                if config.get("flush_all_streams"):
-                    filter_streams = None
-                else:
-                    filter_streams = [stream]
-
+                filter_streams = None if config.get("flush_all_streams") else [stream]
                 # Flush and return a new state dict with new positions only for the flushed streams
                 flushed_state = flush_streams(
                     records_to_load,
@@ -234,9 +227,7 @@ def persist_lines(connection, config, lines) -> None:
 
         elif t == "SCHEMA":
             if "stream" not in o:
-                raise Exception(
-                    "Line is missing required key 'stream': {}".format(line)
-                )
+                raise Exception(f"Line is missing required key 'stream': {line}")
             stream = o["stream"]
 
             schemas[stream] = float_to_decimal(o["schema"])
@@ -301,10 +292,7 @@ def persist_lines(connection, config, lines) -> None:
                 flushed_state = copy.deepcopy(state)
 
         else:
-            raise Exception(
-                "Unknown message type {} in message {}".format(o["type"], o)
-            )
-
+            raise Exception(f"Unknown message type {t} in message {o}")
     # if some bucket has records that need to be flushed but haven't reached batch size
     # then flush all buckets.
     if sum(row_count.values()) > 0:
@@ -340,11 +328,7 @@ def flush_streams(
     """
 
     # Select the required streams to flush
-    if filter_streams:
-        streams_to_flush = filter_streams
-    else:
-        streams_to_flush = streams.keys()
-
+    streams_to_flush = filter_streams or streams.keys()
     for stream in streams_to_flush:
         load_stream_batch(
             stream=stream,
