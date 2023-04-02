@@ -20,4 +20,4 @@ class DuckDBTarget(SQLTarget):
             description="The path to your DuckDB database file(s).",
             required=True,
         )
-    )
+    ).to_dict()
