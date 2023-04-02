@@ -3,7 +3,7 @@ from typing import Any, Dict
 import sqlalchemy
 from singer_sdk import SQLConnector
 
-DB_PATH_CONFIG = "path_to_db"
+DB_PATH_CONFIG = "filepath"
 
 
 class DuckDBConnector(SQLConnector):
@@ -12,9 +12,11 @@ class DuckDBConnector(SQLConnector):
     This class handles all DDL and type conversions.
     """
 
-    allow_temp_tables = False
+    allow_column_add = True
     allow_column_alter = False
+    allow_column_rename = True
     allow_merge_upsert = True
+    allow_temp_tables = False
 
     def get_sqlalchemy_url(self, config: Dict[str, Any]) -> str:
         """Generates a SQLAlchemy URL for DuckDB."""

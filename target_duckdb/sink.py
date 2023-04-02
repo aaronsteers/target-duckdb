@@ -16,4 +16,5 @@ class DuckDBSink(SQLSink):
     in `connector_class` or by overriding the `connector` object.
     """
 
+    MAX_SIZE_DEFAULT = 100000
     connector_class = DuckDBConnector
