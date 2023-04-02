@@ -1,7 +1,7 @@
 from singer_sdk import SQLTarget
 
-from singer_duckdb.config import target_config
-from singer_duckdb.sink import DuckDBSink
+from target_duckdb.config import target_config
+from target_duckdb.sink import DuckDBSink
 
 DB_PATH_CONFIG = "path_to_db"
 

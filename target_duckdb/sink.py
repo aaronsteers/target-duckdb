@@ -2,7 +2,7 @@
 
 from singer_sdk import SQLSink
 
-from singer_duckdb.connector import DuckDBConnector
+from target_duckdb.connector import DuckDBConnector
 
 
 class DuckDBSink(SQLSink):

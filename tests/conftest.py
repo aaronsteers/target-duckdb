@@ -7,7 +7,7 @@ import pytest
 from singer_sdk.helpers._singer import Catalog
 from singer_sdk.testing import _get_tap_catalog
 
-from singer_duckdb import DuckDBConnector, DuckDBTap, DuckDBTarget
+from target_duckdb import DuckDBConnector, DuckDBTap, DuckDBTarget
 
 # Sample DB Setup and Config
 

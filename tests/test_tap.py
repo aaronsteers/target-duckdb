@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from singer_sdk.testing import get_standard_tap_tests
 
-from singer_duckdb import DuckDBTap
+from target_duckdb import DuckDBTap
 
 SAMPLE_CONFIG: Dict[str, Any] = {
     # Tap config for tests are loaded from env vars (see `.env.template`)

@@ -20,7 +20,7 @@ from singer_sdk.testing import (
     target_sync_test,
 )
 
-from singer_duckdb import DuckDBTap
+from target_duckdb import DuckDBTap
 
 
 def _discover_and_select_all(tap: SQLTap) -> None:
