@@ -15,4 +15,3 @@ unit_test:
 integration_test:
 	. ./venv/bin/activate ;\
 	pytest tests/integration -v
-

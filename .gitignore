@@ -1,3 +1,6 @@
+archive
+output
+
 # IDE
 .vscode
 .idea/*
