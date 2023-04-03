@@ -1,7 +1,44 @@
-from typing import Any, Dict
+"""The DuckDB Connection class."""
+from __future__ import annotations
+
+import typing as t
 
 import sqlalchemy
+
+from singer_sdk import typing as th
+
+if t.TYPE_CHECKING:
+    import sqlalchemy
+
 from singer_sdk import SQLConnector
+
+
+class NonSerialIntType(sqlalchemy.types.UserDefinedType):
+    # TODO: Remove after resolved: https://github.com/Mause/duckdb_engine/issues/595
+
+    cache_ok = True
+
+    def __init__(self):
+        pass
+
+    def get_col_spec(self, **kw):
+        return "INT"
+
+    def bind_processor(self, dialect):
+        def process(value):
+            return value
+
+        return process
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            return value
+
+        return process
+
+    @property
+    def python_type(self) -> type:
+        return int
 
 
 class DuckDBConnector(SQLConnector):
@@ -16,7 +53,7 @@ class DuckDBConnector(SQLConnector):
     allow_merge_upsert = True
     allow_temp_tables = False
 
-    def get_sqlalchemy_url(self, config: Dict[str, Any]) -> str:
+    def get_sqlalchemy_url(self, config: dict[str, t.Any]) -> str:
         """Generates a SQLAlchemy URL for DuckDB."""
         return f"duckdb:///{config['filepath']}"
 
@@ -30,7 +67,36 @@ class DuckDBConnector(SQLConnector):
         """
         try:
             return super().create_sqlalchemy_connection()
-        except Exception as ex:
+        except Exception as ex:  # noqa: BLE001  # Blind catch of Exception
             raise RuntimeError(
-                f"Error connecting to DB at '{self.config['filepath']}'"
+                f"Error connecting to DB at '{self.config['filepath']}'",
             ) from ex
+
+    @staticmethod
+    def to_sql_type(jsonschema_type: dict) -> sqlalchemy.types.TypeEngine:
+        """Return a JSON Schema representation of the provided type.
+
+        By default will call `typing.to_sql_type()`.
+
+        Developers may override this method to accept additional input argument types,
+        to support non-standard types, or to provide custom typing logic.
+        If overriding this method, developers should call the default implementation
+        from the base class for all unhandled cases.
+
+        Args:
+            jsonschema_type: The JSON Schema representation of the source type.
+
+        Returns:
+            The SQLAlchemy type representation of the data type.
+        """
+
+        result = th.to_sql_type(jsonschema_type)
+        # TODO: Remove after resolved: https://github.com/Mause/duckdb_engine/issues/595
+        if (
+            isinstance(result, sqlalchemy.types.INTEGER)
+            # "int"
+            # in repr(result).lower()
+        ):
+            return NonSerialIntType()
+
+        return result
