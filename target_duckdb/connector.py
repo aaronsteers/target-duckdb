@@ -5,12 +5,8 @@ import typing as t
 
 import sqlalchemy
 
-from singer_sdk import typing as th
-
-if t.TYPE_CHECKING:
-    import sqlalchemy
-
 from singer_sdk import SQLConnector
+from singer_sdk import typing as th
 
 
 class NonSerialIntType(sqlalchemy.types.UserDefinedType):
