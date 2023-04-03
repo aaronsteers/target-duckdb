@@ -3,8 +3,6 @@ from typing import Any, Dict
 import sqlalchemy
 from singer_sdk import SQLConnector
 
-DB_PATH_CONFIG = "filepath"
-
 
 class DuckDBConnector(SQLConnector):
     """The connector for DuckDB.
@@ -20,7 +18,7 @@ class DuckDBConnector(SQLConnector):
 
     def get_sqlalchemy_url(self, config: Dict[str, Any]) -> str:
         """Generates a SQLAlchemy URL for DuckDB."""
-        return f"duckdb:///{config[DB_PATH_CONFIG]}"
+        return f"duckdb:///{config['filepath']}"
 
     def create_sqlalchemy_connection(self) -> sqlalchemy.engine.Connection:
         """Return a new SQLAlchemy connection using the provided config.
@@ -34,5 +32,5 @@ class DuckDBConnector(SQLConnector):
             return super().create_sqlalchemy_connection()
         except Exception as ex:
             raise RuntimeError(
-                f"Error connecting to DB at '{self.config[DB_PATH_CONFIG]}'"
+                f"Error connecting to DB at '{self.config['filepath']}'"
             ) from ex

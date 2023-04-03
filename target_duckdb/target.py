@@ -3,8 +3,6 @@ from singer_sdk import typing as th
 
 from target_duckdb.sink import DuckDBSink
 
-DB_PATH_CONFIG = "filepath"
-
 
 class DuckDBTarget(SQLTarget):
     """The Tap class for DuckDB."""
