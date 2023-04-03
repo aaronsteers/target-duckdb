@@ -1,7 +1,7 @@
-"""A sample implementation for DuckDB."""
+"""The DuckDB Sink class."""
+from __future__ import annotations
 
 from singer_sdk import SQLSink
-
 from target_duckdb.connector import DuckDBConnector
 
 

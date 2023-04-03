@@ -1,6 +1,8 @@
+"""The DuckDB Target class."""
+from __future__ import annotations
+
 from singer_sdk import SQLTarget
 from singer_sdk import typing as th
-
 from target_duckdb.sink import DuckDBSink
 
 
@@ -17,5 +19,5 @@ class DuckDBTarget(SQLTarget):
             th.StringType,
             description="The path to your DuckDB database file(s).",
             required=True,
-        )
+        ),
     ).to_dict()
